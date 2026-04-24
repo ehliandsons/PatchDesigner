@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PatchDesigner Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin:0;
+      font-family:system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:#0b0b0b;
+      color:#fff;
+    }
+    header {
+      padding:12px 20px;
+      background:#111;
+      border-bottom:1px solid #222;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    header h1 {
+      margin:0;
+      font-size:18px;
+      color:#E8602B;
+    }
+    .tabs {
+      display:flex;
+      gap:8px;
+    }
+    .tab-btn {
+      background:#222;
+      border:none;
+      color:#fff;
+      padding:6px 10px;
+      border-radius:4px;
+      cursor:pointer;
+      font-size:13px;
+    }
+    .tab-btn.active {
+      background:#E8602B;
+    }
+    main {
+      padding:16px;
+    }
+    .tab-panel {
+      display:none;
+    }
+    .tab-panel.active {
+      display:block;
+    }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+    th, td {
+      padding:8px;
+      border-bottom:1px solid #222;
+      text-align:left;
+    }
+    th {
+      background:#151515;
+    }
+    tr:hover td {
+      background:#181818;
+    }
+    .btn {
+      background:#E8602B;
+      border:none;
+      color:#fff;
+      padding:6px 10px;
+      border-radius:4px;
+      cursor:pointer;
+      font-size:12px;
+    }
+    .btn-secondary {
+      background:#444;
+    }
+
+    .designer-wrapper {
+      max-width:1000px;
+      margin:0 auto;
+      text-align:center;
+    }
+    .designer-canvas-container {
+      background:#111;
+      border-radius:8px;
+      padding:16px;
+      border:1px solid #222;
+    }
+    .designer-canvas-container canvas {
+      max-width:100%;
+      height:auto;
+      background:#222;
+      border-radius:6px;
+      border:1px solid #444;
+      display:block;
+      margin:0 auto;
+    }
+    .designer-controls {
+      margin-top:16px;
+      background:#111;
+      border-radius:8px;
+      padding:16px;
+      border:1px solid #222;
+      text-align:left;
+    }
+    .designer-controls h3 {
+      margin-top:0;
+      color:#E8602B;
+      font-size:16px;
+    }
+    .field-label {
+      display:block;
+      font-size:13px;
+      margin:8px 0 2px;
+    }
+    .field-input,
+    .field-textarea,
+    .field-file,
+    .field-select {
+      width:100%;
+      padding:6px;
+      border-radius:4px;
+      border:1px solid #444;
+      background:#0b0b0b;
+      color:#fff;
+      font-size:13px;
+    }
+    .field-textarea {
+      min-height:120px;
+      font-family:monospace;
+      font-size:12px;
+      white-space:pre;
+      overflow-x:auto;
+    }
+    .btn-row {
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+    .zones-list {
+      margin-top:10px;
+      border-top:1px solid #222;
+      padding-top:8px;
+    }
+    .zone-item {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      background:#181818;
+      border-radius:4px;
+      padding:6px;
+      margin-bottom:4px;
+      font-size:12px;
+    }
+    .zone-item span {
+      flex:1;
+      margin-right:8px;
+    }
+    .top-row {
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      margin-bottom:12px;
+    }
+    .top-row select {
+      min-width:220px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>PatchDesigner Admin</h1>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="orders">Orders</button>
+      <button class="tab-btn" data-tab="designer">Designer</button>
+      <button class="tab-btn" data-tab="settings">Settings</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="tab-orders" class="tab-panel active">
+      <h2>Orders with Patch Config</h2>
+      <p style="font-size:13px;color:#ccc;">These orders contain the "Patch Config JSON" line item property.</p>
+      <button class="btn" id="refresh-orders">Refresh orders</button>
+      <div id="orders-container" style="margin-top:12px;">
+        <p style="font-size:13px;color:#888;">Loading orders...</p>
+      </div>
+    </section>
+
+    <section id="tab-designer" class="tab-panel">
+      <div class="designer-wrapper">
+        <div class="top-row">
+          <div>
+            <label class="field-label">Load order into designer</label>
+            <select id="designer-order-select" class="field-select">
+              <option value="">Select an order…</option>
+            </select>
+          </div>
+          <button class="btn btn-secondary" id="designer-reload-from-order">Reload selected order</button>
+        </div>
+
+        <div class="designer-canvas-container">
+          <canvas id="designer-canvas"></canvas>
+        </div>
+
+        <div class="designer-controls">
+          <h3>Patch Image</h3>
+          <label class="field-label">Upload image</label>
+          <input type="file" id="designer-upload" class="field-file" accept="image/*">
+
+          <h3 style="margin-top:16px;">Text Zones</h3>
+          <label class="field-label">Text</label>
+          <input type="text" id="designer-text" class="field-input" value="Sample Text">
+
+          <label class="field-label">Font family</label>
+          <select id="designer-font-family" class="field-select">
+            <option value="Arial">Arial</option>
+            <option value="Helvetica">Helvetica</option>
+            <option value="Impact">Impact</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Courier New">Courier New</option>
+          </select>
+
+          <label class="field-label">Font size (px)</label>
+          <input type="number" id="designer-font-size" class="field-input" value="32" min="8" max="200">
+
+          <label class="field-label">Color (hex)</label>
+          <input type="text" id="designer-color" class="field-input" value="#ffffff">
+
+          <div class="btn-row">
+            <button class="btn" id="designer-add-zone">Add text zone</button>
+            <button class="btn btn-secondary" id="designer-update-zone">Update selected</button>
+            <button class="btn btn-secondary" id="designer-delete-zone">Delete selected</button>
+          </div>
+
+          <div id="designer-zones-list" class="zones-list"></div>
+
+          <h3 style="margin-top:16px;">Config JSON</h3>
+          <textarea id="designer-json" class="field-textarea" readonly></textarea>
+
+          <div class="btn-row">
+            <button class="btn btn-secondary" id="designer-copy-json">Copy JSON</button>
+            <button class="btn btn-secondary" id="designer-load-json">Load JSON from clipboard</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-settings" class="tab-panel">
+      <h2>Settings</h2>
+      <p style="font-size:13px;color:#ccc;">You can wire additional settings here later.</p>
+    </section>
+  </main>
+
+  <script>
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    let orders = [];
+    let currentOrderId = null;
+    let currentOrderConfig = null;
+
+    async function fetchOrders() {
+      const container = document.getElementById("orders-container");
+      container.innerHTML = "<p style='font-size:13px;color:#888;'>Loading orders…</p>";
+      try {
+        const res = await fetch("/.netlify/functions/orders-with-config");
+        if (!res.ok) throw new Error("Failed to fetch orders");
+        const data = await res.json();
+        orders = data.orders || [];
+        renderOrdersTable();
+        populateDesignerOrderSelect();
+      } catch (e) {
+        container.innerHTML = "<p style='color:#f66;font-size:13px;'>Error loading orders.</p>";
+      }
+    }
+
+    function renderOrdersTable() {
+      const container = document.getElementById("orders-container");
+      if (!orders.length) {
+        container.innerHTML = "<p style='font-size:13px;color:#888;'>No orders with Patch Config JSON yet.</p>";
+        return;
+      }
+      let html = "<table><thead><tr><th>Order</th><th>Date</th><th>Customer</th><th>Actions</th></tr></thead><tbody>";
+      for (const order of orders) {
+        const name = order.name || ("#" + order.id);
+        const created = order.created_at || "";
+        const customer = order.customer ? (order.customer.first_name || "") + " " + (order.customer.last_name || "") : "";
+        html += "<tr>";
+        html += "<td>" + name + "</td>";
+        html += "<td>" + created + "</td>";
+        html += "<td>" + customer + "</td>";
+        html += "<td><button class='btn btn-secondary' data-order-id='" + order.id + "'>Open in Designer</button></td>";
+        html += "</tr>";
+      }
+      html += "</tbody></table>";
+      container.innerHTML = html;
+
+      container.querySelectorAll("button[data-order-id]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-order-id");
+          openOrderInDesigner(id);
+        });
+      });
+    }
+
+    function populateDesignerOrderSelect() {
+      const select = document.getElementById("designer-order-select");
+      select.innerHTML = "<option value=''>Select an order…</option>";
+      for (const order of orders) {
+        const name = order.name || ("#" + order.id);
+        const option = document.createElement("option");
+        option.value = order.id;
+        option.textContent = name;
+        select.appendChild(option);
+      }
+    }
+
+    function findPatchConfig(order) {
+      if (!order || !order.line_items) return null;
+      for (const item of order.line_items) {
+        if (!item.properties) continue;
+        for (const p of item.properties) {
+          if (p.name === "Patch Config JSON" && p.value) {
+            try {
+              return JSON.parse(p.value);
+            } catch (e) {
+              return null;
+            }
+          }
+        }
+      }
+      return null;
+    }
+
+    function openOrderInDesigner(orderId) {
+      const order = orders.find(o => String(o.id) === String(orderId));
+      if (!order) return;
+      currentOrderId = order.id;
+      currentOrderConfig = findPatchConfig(order);
+      document.querySelector(".tab-btn[data-tab='designer']").click();
+      const select = document.getElementById("designer-order-select");
+      select.value = String(order.id);
+      if (currentOrderConfig) {
+        loadConfigIntoDesigner(currentOrderConfig);
+      } else {
+        alert("This order does not contain valid Patch Config JSON.");
+      }
+    }
+
+    document.getElementById("designer-reload-from-order").addEventListener("click", () => {
+      const select = document.getElementById("designer-order-select");
+      const id = select.value;
+      if (!id) {
+        alert("Select an order first.");
+        return;
+      }
+      openOrderInDesigner(id);
+    });
+
+    document.getElementById("designer-order-select").addEventListener("change", (e) => {
+      const id = e.target.value;
+      if (!id) return;
+      openOrderInDesigner(id);
+    });
+
+    document.getElementById("refresh-orders").addEventListener("click", fetchOrders);
+
+    const dCanvas = document.getElementById("designer-canvas");
+    const dCtx = dCanvas.getContext("2d");
+
+    const dUpload = document.getElementById("designer-upload");
+    const dText = document.getElementById("designer-text");
+    const dFontFamily = document.getElementById("designer-font-family");
+    const dFontSize = document.getElementById("designer-font-size");
+    const dColor = document.getElementById("designer-color");
+
+    const dAddZone = document.getElementById("designer-add-zone");
+    const dUpdateZone = document.getElementById("designer-update-zone");
+    const dDeleteZone = document.getElementById("designer-delete-zone");
+
+    const dZonesList = document.getElementById("designer-zones-list");
+    const dJson = document.getElementById("designer-json");
+    const dCopyJson = document.getElementById("designer-copy-json");
+    const dLoadJson = document.getElementById("designer-load-json");
+
+    let dBaseImage = new Image();
+    let dZones = [];
+    let dSelectedIndex = -1;
+    let dDragging = false;
+    let dOffsetX = 0;
+    let dOffsetY = 0;
+
+    function dSetCanvasToImage(img) {
+      dCanvas.width = img.naturalWidth;
+      dCanvas.height = img.naturalHeight;
+      dRender();
+    }
+
+    function dRender() {
+      if (!dBaseImage.src) {
+        dCtx.clearRect(0, 0, dCanvas.width, dCanvas.height);
+        dJson.value = "";
+        return;
+      }
+      dCtx.clearRect(0, 0, dCanvas.width, dCanvas.height);
+      dCtx.drawImage(dBaseImage, 0, 0, dCanvas.width, dCanvas.height);
+
+      dZones.forEach((zone, index) => {
+        dCtx.font = zone.fontSize + "px " + zone.fontFamily;
+        dCtx.fillStyle = zone.color;
+        dCtx.textBaseline = "top";
+        dCtx.fillText(zone.text, zone.x, zone.y);
+
+        if (index === dSelectedIndex) {
+          dCtx.strokeStyle = "#E8602B";
+          dCtx.lineWidth = 2;
+          const metrics = dCtx.measureText(zone.text);
+          const width = metrics.width;
+          const height = zone.fontSize * 1.2;
+          dCtx.strokeRect(zone.x, zone.y, width, height);
+        }
+      });
+
+      dUpdateJson();
+      dRenderZonesList();
+    }
+
+    function dUpdateJson() {
+      const config = {
+        baseImage: dBaseImage.src || null,
+        textZones: dZones
+      };
+      dJson.value = JSON.stringify(config, null, 2);
+    }
+
+    function dRenderZonesList() {
+      dZonesList.innerHTML = "";
+      dZones.forEach((zone, index) => {
+        const div = document.createElement("div");
+        div.className = "zone-item";
+        const span = document.createElement("span");
+        span.textContent = (index + 1) + ": " + zone.text + " (" + zone.x + "," + zone.y + ")";
+        div.appendChild(span);
+        const btn = document.createElement("button");
+        btn.className = "btn btn-secondary";
+        btn.textContent = "Select";
+        btn.addEventListener("click", () => {
+          dSelectedIndex = index;
+          dLoadZoneIntoControls(zone);
+          dRender();
+        });
+        div.appendChild(btn);
+        dZonesList.appendChild(div);
+      });
+    }
+
+    function dLoadZoneIntoControls(zone) {
+      dText.value = zone.text;
+      dFontFamily.value = zone.fontFamily;
+      dFontSize.value = zone.fontSize;
+      dColor.value = zone.color;
+    }
+
+    function dAddZoneFn() {
+      if (!dBaseImage.src) {
+        alert("Upload an image or load an order first.");
+        return;
+      }
+      const zone = {
+        text: dText.value || "Text",
+        fontFamily: dFontFamily.value || "Arial",
+        fontSize: parseInt(dFontSize.value, 10) || 32,
+        color: dColor.value || "#ffffff",
+        x: Math.round(dCanvas.width / 4),
+        y: Math.round(dCanvas.height / 4)
+      };
+      dZones.push(zone);
+      dSelectedIndex = dZones.length - 1;
+      dRender();
+    }
+
+    function dUpdateZoneFn() {
+      if (dSelectedIndex < 0 || dSelectedIndex >= dZones.length) return;
+      const zone = dZones[dSelectedIndex];
+      zone.text = dText.value || zone.text;
+      zone.fontFamily = dFontFamily.value || zone.fontFamily;
+      zone.fontSize = parseInt(dFontSize.value, 10) || zone.fontSize;
+      zone.color = dColor.value || zone.color;
+      dRender();
+    }
+
+    function dDeleteZoneFn() {
+      if (dSelectedIndex < 0 || dSelectedIndex >= dZones.length) return;
+      dZones.splice(dSelectedIndex, 1);
+      dSelectedIndex = -1;
+      dRender();
+    }
+
+    function dHitTest(x, y) {
+      for (let i = dZones.length - 1; i >= 0; i--) {
+        const zone = dZones[i];
+        dCtx.font = zone.fontSize + "px " + zone.fontFamily;
+        const metrics = dCtx.measureText(zone.text);
+        const width = metrics.width;
+        const height = zone.fontSize * 1.2;
+        const left = zone.x;
+        const top = zone.y;
+        const right = left + width;
+        const bottom = top + height;
+        if (x >= left && x <= right && y >= top && y <= bottom) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
+    function dCanvasPoint(evt) {
+      const rect = dCanvas.getBoundingClientRect();
+      let clientX, clientY;
+      if (evt.touches && evt.touches.length > 0) {
+        clientX = evt.touches[0].clientX;
+        clientY = evt.touches[0].clientY;
+      } else {
+        clientX = evt.clientX;
+        clientY = evt.clientY;
+      }
+      const x = (clientX - rect.left) * (dCanvas.width / rect.width);
+      const y = (clientY - rect.top) * (dCanvas.height / rect.height);
+      return { x, y };
+    }
+
+    function dPointerDown(evt) {
+      if (!dBaseImage.src) return;
+      const pt = dCanvasPoint(evt);
+      const index = dHitTest(pt.x, pt.y);
+      if (index !== -1) {
+        dSelectedIndex = index;
+        const zone = dZones[index];
+        dLoadZoneIntoControls(zone);
+        dDragging = true;
+        dOffsetX = pt.x - zone.x;
+        dOffsetY = pt.y - zone.y;
+        dRender();
+        evt.preventDefault();
+      }
+    }
+
+    function dPointerMove(evt) {
+      if (!dDragging) return;
+      const pt = dCanvasPoint(evt);
+      const zone = dZones[dSelectedIndex];
+      zone.x = Math.round(pt.x - dOffsetX);
+      zone.y = Math.round(pt.y - dOffsetY);
+      dRender();
+      evt.preventDefault();
+    }
+
+    function dPointerUp(evt) {
+      if (dDragging) {
+        dDragging = false;
+        evt.preventDefault();
+      }
+    }
+
+    dCanvas.addEventListener("mousedown", dPointerDown);
+    dCanvas.addEventListener("mousemove", dPointerMove);
+    dCanvas.addEventListener("mouseup", dPointerUp);
+    dCanvas.addEventListener("mouseleave", dPointerUp);
+
+    dCanvas.addEventListener("touchstart", dPointerDown, { passive:false });
+    dCanvas.addEventListener("touchmove", dPointerMove, { passive:false });
+    dCanvas.addEventListener("touchend", dPointerUp, { passive:false });
+    dCanvas.addEventListener("touchcancel", dPointerUp, { passive:false });
+
+    dUpload.addEventListener("change", (evt) => {
+      const file = evt.target.files && evt.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          dBaseImage = img;
+          dSetCanvasToImage(img);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    dAddZone.addEventListener("click", dAddZoneFn);
+    dUpdateZone.addEventListener("click", dUpdateZoneFn);
+    dDeleteZone.addEventListener("click", dDeleteZoneFn);
+
+    dCopyJson.addEventListener("click", () => {
+      if (!navigator.clipboard) {
+        alert("Clipboard API not available.");
+        return;
+      }
+      navigator.clipboard.writeText(dJson.value || "").then(() => {
+        alert("JSON copied.");
+      });
+    });
+
+    dLoadJson.addEventListener("click", async () => {
+      try {
+        if (!navigator.clipboard) {
+          alert("Clipboard API not available.");
+          return;
+        }
+        const text = await navigator.clipboard.readText();
+        const parsed = JSON.parse(text);
+        loadConfigIntoDesigner(parsed);
+      } catch (e) {
+        alert("Invalid JSON in clipboard.");
+      }
+    });
+
+    function loadConfigIntoDesigner(config) {
+      if (!config || !config.baseImage) {
+        alert("Config missing baseImage.");
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        dBaseImage = img;
+        dSetCanvasToImage(img);
+        dZones = Array.isArray(config.textZones) ? config.textZones : [];
+        dSelectedIndex = -1;
+        dRender();
+      };
+      img.src = config.baseImage;
+    }
+
+    fetchOrders();
+  </script>
+</body>
+</html>
