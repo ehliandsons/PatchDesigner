@@ -23,7 +23,6 @@ exports.handler = async (event) => {
 
   const data = await res.json();
 
-  // Store token in Netlify session cookie
   return {
     statusCode: 302,
     headers: {
