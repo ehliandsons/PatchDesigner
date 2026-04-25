@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PatchDesigner – Standalone Designer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./designer.css" />
+</head>
+
+<body>
+  <header class="header">
+    <div>
+      <h1>PatchDesigner – Standalone</h1>
+      <p class="sub">Internal playground for testing configs</p>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- CENTER PANEL — CANVAS -->
+    <section class="panel canvas-panel">
+      <canvas id="preview-canvas" width="700" height="500"></canvas>
+      <div class="toolbar">
+        <button id="export-png" class="btn small">Export PNG</button>
+        <button id="export-svg" class="btn small">Export SVG</button>
+        <button id="copy-json" class="btn small">Copy JSON</button>
+        <button id="undo" class="btn small">Undo</button>
+        <button id="redo" class="btn small">Redo</button>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL — CONTROLS -->
+    <aside class="panel controls-panel">
+      <h2>Layers</h2>
+      <div id="layers-list" class="layers-list"></div>
+
+      <div class="toolbar" style="margin-top:8px;">
+        <button id="add-text-layer" class="btn small">Add Text</button>
+        <button id="add-image-layer" class="btn small">Add Image</button>
+        <button id="delete-layer" class="btn small danger">Delete Layer</button>
+      </div>
+
+      <div class="control-group">
+        <label>Text</label>
+        <input id="layer-text" type="text" class="input" />
+      </div>
+
+      <div class="control-group">
+        <label>Font</label>
+        <select id="layer-font" class="input">
+          <option value="system-ui">System</option>
+          <option value="Arial">Arial</option>
+          <option value="Helvetica">Helvetica</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Courier New">Courier</option>
+          <option value="Cinzel">Cinzel</option>
+          <option value="Oswald">Oswald</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Size</label>
+        <input id="layer-size" type="number" class="input" value="32" min="8" max="120" />
+      </div>
+
+      <div class="control-group">
+        <label>Color</label>
+        <input id="layer-color" type="color" class="input" value="#ffffff" />
+      </div>
+
+      <div class="control-group">
+        <label>Image Upload</label>
+        <input id="image-upload" type="file" class="input" accept="image/*" />
+      </div>
+
+      <div class="control-group">
+        <label>Snapping</label>
+        <select id="snap-mode" class="input">
+          <option value="none">None</option>
+          <option value="grid">Grid (20px)</option>
+          <option value="center">Center</option>
+        </select>
+      </div>
+
+      <h3>JSON</h3>
+      <textarea id="config-json" class="json-box"></textarea>
+    </aside>
+  </main>
+
+  <script src="./designer.js"></script>
+</body>
+</html>

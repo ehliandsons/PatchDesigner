@@ -1,0 +1,7 @@
+{
+  "name": "Patch Hat Previewer",
+  "target": "section",
+  "settings": {
+    "preset_image": "Preset patch image"
+  }
+}

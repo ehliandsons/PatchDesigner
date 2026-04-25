@@ -1,0 +1,11 @@
+{
+  "Patch Hat Previewer": {
+    "name": "Patch Hat Previewer",
+    "settings": {
+      "preset_image": "Preset patch image"
+    }
+  },
+  "PD Admin Launcher": {
+    "name": "PD Admin Launcher"
+  }
+}

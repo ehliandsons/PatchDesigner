@@ -1,0 +1,33 @@
+{% comment %}
+PatchDesigner App Embed
+Exposes a global function to open the Vercel admin with Shopify OAuth.
+{% endcomment %}
+
+<script id="patchdesigner-embed">
+  window.PatchDesignerApp = {
+    shop: "{{ shop.permanent_domain }}",
+    adminUrl: "https://YOUR-VERCEL-DOMAIN.vercel.app/admin",
+    loginUrl: "https://YOUR-VERCEL-DOMAIN.vercel.app/api/auth-shopify"
+  };
+</script>
+
+<script>
+  (function() {
+    const cfg = window.PatchDesignerApp;
+
+    window.openPatchDesignerAdmin = function() {
+      const url =
+        cfg.loginUrl +
+        "?shop=" + encodeURIComponent(cfg.shop);
+      window.open(url, "_blank");
+    };
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "PD Admin Launcher",
+  "target": "body",
+  "settings": []
+}
+{% endschema %}

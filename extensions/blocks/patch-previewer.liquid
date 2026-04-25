@@ -1,0 +1,100 @@
+{% comment %}
+Patch Hat Previewer – App Block
+Customer-facing patch designer for product pages.
+{% endcomment %}
+
+<div id="php-{{ block.id }}" class="php-root">
+  <canvas id="php-canvas-{{ block.id }}"></canvas>
+
+  <input type="hidden"
+         name="properties[Patch Config JSON]"
+         id="php-config-input-{{ block.id }}">
+</div>
+
+<style>
+  #php-{{ block.id }} {
+    background:#111;
+    padding:20px;
+    border-radius:8px;
+  }
+  #php-{{ block.id }} canvas {
+    max-width:100%;
+    height:auto;
+    background:#222;
+    border:1px solid #444;
+    border-radius:6px;
+  }
+</style>
+
+<script>
+(function() {
+  const id = "{{ block.id }}";
+  const canvas = document.getElementById("php-canvas-" + id);
+  const ctx = canvas.getContext("2d");
+  const hiddenInput = document.getElementById("php-config-input-" + id);
+
+  let baseImage = new Image();
+  let zones = [];
+
+  function render() {
+    if (!baseImage.src) {
+      canvas.width = 600;
+      canvas.height = 400;
+      ctx.fillStyle = "#111827";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+    } else {
+      canvas.width = baseImage.naturalWidth;
+      canvas.height = baseImage.naturalHeight;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(baseImage,0,0);
+    }
+
+    zones.forEach(z => {
+      ctx.font = (z.fontSize || 24) + "px " + (z.fontFamily || "system-ui");
+      ctx.fillStyle = z.color || "#ffffff";
+      ctx.textBaseline = "top";
+      ctx.fillText(z.text || "", z.x || 20, z.y || 20);
+    });
+
+    hiddenInput.value = JSON.stringify({
+      baseImage: baseImage.src || null,
+      textZones: zones
+    });
+  }
+
+  window.PatchPreviewer = {
+    loadImage(src) {
+      const img = new Image();
+      img.onload = () => {
+        baseImage = img;
+        render();
+      };
+      img.src = src;
+    },
+    addTextZone(zone) {
+      zones.push(zone);
+      render();
+    },
+    updateZones(newZones) {
+      zones = newZones;
+      render();
+    }
+  };
+
+  render();
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Patch Previewer",
+  "target": "section",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "preset_image",
+      "label": "Preset patch image"
+    }
+  ]
+}
+{% endschema %}

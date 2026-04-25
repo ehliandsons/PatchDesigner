@@ -1,0 +1,15 @@
+{
+  "name": "patchdesigner",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo \"Static build only\"",
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "cookie": "^0.6.0",
+    "node-fetch": "^3.3.2",
+    "querystring": "^0.2.1"
+  }
+}
